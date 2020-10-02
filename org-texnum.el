@@ -73,10 +73,16 @@ subheadline."
                          (seq (+ (seq (+ digit)
                                       (opt ".")))
                               (* (regexp "[a-z]")))) "}") end t)
-      (replace-match (org-texnum//tag-from-num-list num-lst) nil nil nil 1)
+      ;; replace regex match if different from current tag
+      (let ((replacement-text (org-texnum//tag-from-num-list num-lst)))
+        (if (not (string-equal (match-string 1) replacement-text))
+            (progn
+              (replace-match replacement-text nil nil nil 1)
+              ;; buffer parse is now invalid, perform the whole process again
+              (funcall-interactively #'org-texnum/update-eqn-numbers-in-buffer))))
       (setq num-lst (-snoc (butlast num-lst) (org-texnum//inc-char (car (last num-lst))))))
     ;; update source block result
-    (goto-char beg)
+    (goto-char (+ 1 beg)) ;; sometimes, we seem to be one position too early
     (org-ctrl-c-ctrl-c)
     ;; If we didn't encounter a tag, the last number of num-lst should
     ;; remain unchanged for the next latex block. Otherwise, increment
@@ -97,14 +103,18 @@ subheadline."
                          (seq (+ (seq (+ digit)
                                       (opt ".")))
                               (* (regexp "[a-z]")))) "}") end t)
-      (replace-match (org-texnum//tag-from-num-list num-lst) nil nil nil 1)
+      ;; replace regex match if different from current tag
+      (let ((replacement-text (org-texnum//tag-from-num-list num-lst)))
+        (if (not (string-equal (match-string 1) replacement-text))
+            (progn
+              (replace-match replacement-text nil nil nil 1)
+              ;; buffer parse is now invalid, perform the whole process again
+              (funcall-interactively #'org-texnum/update-eqn-numbers-in-buffer))))
       (setq num-lst (-snoc (butlast num-lst) (+ 1 (car (last num-lst))))))
     ;; update source block result
-    (goto-char beg)
+    (goto-char (+ 1 beg)) ;; sometimes, we seem to be one position too early
     (org-ctrl-c-ctrl-c)
-    ;; If we didn't encounter a tag, the last number of num-lst should
-    ;; remain unchanged for the next latex block. Otherwise, increment
-    ;; the last number for the next block.
+    ;; return number that should be used for next equation tag
     (let ((last-num (car (last num-lst))))
       last-num)))
 
