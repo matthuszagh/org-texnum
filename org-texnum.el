@@ -144,4 +144,6 @@ subheadline."
         (org-texnum//update-eqn-numbers-in-headline headline (list i))
         (setq i (+ 1 i))))))
 
+(provide 'org-texnum)
+
 ;;; org-texnum.el ends here
