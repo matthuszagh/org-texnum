@@ -6,6 +6,11 @@
 
 (require 'org-ml)
 
+(defun org-texnum//inc-char (char)
+  "Increment CHAR.
+For instance this will perform 'a' -> 'b'"
+  (string (1+ (string-to-char char))))
+
 (defun org-texnum//tag-from-num-list (num-lst)
   "Convert NUM-LST to tag expected by latex.
 For example, '(1 2 a) would become 1.2a."
