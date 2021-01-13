@@ -81,9 +81,6 @@ subheadline."
               ;; buffer parse is now invalid, perform the whole process again
               (funcall-interactively #'org-texnum/update-eqn-numbers-in-buffer))))
       (setq num-lst (-snoc (butlast num-lst) (org-texnum//inc-char (car (last num-lst))))))
-    ;; update source block result
-    (goto-char (+ 1 beg)) ;; sometimes, we seem to be one position too early
-    (org-ctrl-c-ctrl-c)
     ;; If we didn't encounter a tag, the last number of num-lst should
     ;; remain unchanged for the next latex block. Otherwise, increment
     ;; the last number for the next block.
@@ -111,12 +108,29 @@ subheadline."
               ;; buffer parse is now invalid, perform the whole process again
               (funcall-interactively #'org-texnum/update-eqn-numbers-in-buffer))))
       (setq num-lst (-snoc (butlast num-lst) (+ 1 (car (last num-lst))))))
-    ;; update source block result
-    (goto-char (+ 1 beg)) ;; sometimes, we seem to be one position too early
-    (org-ctrl-c-ctrl-c)
     ;; return number that should be used for next equation tag
     (let ((last-num (car (last num-lst))))
       last-num)))
+
+(defun org-texnum//execute-equations-in-section (section take)
+  "Only execute TAKE block so that this function can be called recursively."
+  (let ((latex-block (nth take (org-texnum//get-latex-blocks-in-section section))))
+    (if latex-block
+        (let ((beg (org-ml-get-property :begin latex-block)))
+          (goto-char (+ 1 beg))
+          (org-ctrl-c-ctrl-c)
+          (org-texnum//execute-equations-in-section
+           ;; need to refresh invalidated section
+           (org-ml-parse-section-at (point))
+           (+ 1 take))))))
+
+(defun org-texnum//execute-equations-in-headline (headline)
+  ""
+  (let ((section (org-texnum//get-section headline))
+        (headlines (org-texnum//get-headlines headline)))
+    (org-texnum//execute-equations-in-section section 0)
+    (dolist (headline headlines)
+      (org-texnum//execute-equations-in-headline headline))))
 
 (defun org-texnum//update-eqn-numbers-in-section (section num-lst)
   ""
@@ -157,7 +171,14 @@ subheadline."
     (let ((i 1))
       (dolist (headline headlines)
         (org-texnum//update-eqn-numbers-in-headline headline (list i))
-        (setq i (+ 1 i))))))
+        (setq i (+ 1 i))))
+    ;; update equation numbers
+    (org-texnum//execute-equations-in-section section 0)
+    ;; TODO the minute one headline changes due to an executed block,
+    ;; all others are invalidated. We deal with invalidated sections,
+    ;; but not the full buffer parse.
+    (dolist (headline headlines)
+      (org-texnum//execute-equations-in-headline headline))))
 
 (provide 'org-texnum)
 
