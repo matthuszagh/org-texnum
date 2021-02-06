@@ -79,7 +79,7 @@ subheadline."
             (progn
               (replace-match replacement-text nil nil nil 1)
               ;; buffer parse is now invalid, perform the whole process again
-              (funcall-interactively #'org-texnum/update-eqn-numbers-in-buffer))))
+              (funcall-interactively #'org-texnum/update-eqn-numbers-in-current-buffer))))
       (setq num-lst (-snoc (butlast num-lst) (org-texnum//inc-char (car (last num-lst))))))
     ;; If we didn't encounter a tag, the last number of num-lst should
     ;; remain unchanged for the next latex block. Otherwise, increment
@@ -106,7 +106,7 @@ subheadline."
             (progn
               (replace-match replacement-text nil nil nil 1)
               ;; buffer parse is now invalid, perform the whole process again
-              (funcall-interactively #'org-texnum/update-eqn-numbers-in-buffer))))
+              (funcall-interactively #'org-texnum/update-eqn-numbers-in-current-buffer))))
       (setq num-lst (-snoc (butlast num-lst) (+ 1 (car (last num-lst))))))
     ;; return number that should be used for next equation tag
     (let ((last-num (car (last num-lst))))
@@ -171,7 +171,7 @@ subheadline."
             (org-texnum//latex-blocks-in-headline headline latex-blocks)))
     latex-blocks))
 
-(defun org-texnum//latex-blocks-in-buffer ()
+(defun org-texnum//latex-blocks-in-current-buffer ()
   "Retrieve all LaTeX src blocks in the current buffer."
   (let* ((buffer-tree (org-ml-parse-this-buffer))
          (top-section (car (org-ml-match '(section) buffer-tree)))
@@ -183,7 +183,7 @@ subheadline."
 
 (defun org-texnum//latex-blocks-begin ()
   "Retrieve begin position of all LaTeX blocks in the current buffer."
-  (let ((latex-blocks (org-texnum//latex-blocks-in-buffer))
+  (let ((latex-blocks (org-texnum//latex-blocks-in-current-buffer))
         (blocks-begin '()))
     (dolist (latex-block latex-blocks)
       (setq blocks-begin (append blocks-begin
@@ -195,7 +195,7 @@ subheadline."
   (goto-char pos)
   (org-ctrl-c-ctrl-c))
 
-(defun org-texnum//execute-all-latex-blocks-in-buffer-from-count (count)
+(defun org-texnum//execute-all-latex-blocks-in-current-buffer-from-count (count)
   "Execute all LaTeX src blocks (ctrl-C ctrl-C) in the current buffer from COUNT."
   (let* ((latex-blocks-begin (org-texnum//latex-blocks-begin))
          (latex-block-counter-max (length latex-blocks-begin)))
@@ -207,20 +207,18 @@ subheadline."
             (setq count (+ 1 count))
             (setq begin (nth count latex-blocks-begin)))
           (save-buffer)
-          (org-texnum//execute-all-latex-blocks-in-buffer-from-count count)))))
+          (org-texnum//execute-all-latex-blocks-in-current-buffer-from-count count)))))
 
-(defun org-texnum/execute-all-latex-blocks-in-buffer ()
+(defun org-texnum/execute-all-latex-blocks-in-current-buffer ()
   "Execute all LaTeX src blocks (ctrl-C ctrl-C) in the current buffer."
   (interactive)
-  (org-texnum//execute-all-latex-blocks-in-buffer-from-count 0))
-
-;; TODO rename in-buffer to in-current-buffer to be more accurate.
+  (org-texnum//execute-all-latex-blocks-in-current-buffer-from-count 0))
 
 ;; TODO separate update equation numbers and execute all
 ;; equations. Top-level function that calls both should be called
 ;; `org-texnum/normalize-equation-numbers-in-buffer'.
 
-(defun org-texnum/update-eqn-numbers-in-buffer ()
+(defun org-texnum/update-eqn-numbers-in-current-buffer ()
   "Update equation numbers LaTeX src blocks and execute all blocks."
   (interactive)
   (let* ((data (org-ml-get-children (org-ml-parse-this-buffer)))
@@ -232,7 +230,7 @@ subheadline."
       (dolist (headline headlines)
         (org-texnum//update-eqn-numbers-in-headline headline (list i))
         (setq i (+ 1 i))))
-    (org-texnum/execute-all-latex-blocks-in-buffer)))
+    (org-texnum/execute-all-latex-blocks-in-current-buffer)))
 
 (provide 'org-texnum)
 
