@@ -76,10 +76,7 @@ subheadline."
       ;; replace regex match if different from current tag
       (let ((replacement-text (org-texnum//tag-from-num-list num-lst)))
         (if (not (string-equal (match-string 1) replacement-text))
-            (progn
-              (replace-match replacement-text nil nil nil 1)
-              ;; buffer parse is now invalid, perform the whole process again
-              (funcall-interactively #'org-texnum/update-eqn-numbers-in-current-buffer))))
+            (replace-match replacement-text nil nil nil 1)))
       (setq num-lst (-snoc (butlast num-lst) (org-texnum//inc-char (car (last num-lst))))))
     ;; If we didn't encounter a tag, the last number of num-lst should
     ;; remain unchanged for the next latex block. Otherwise, increment
@@ -103,10 +100,7 @@ subheadline."
       ;; replace regex match if different from current tag
       (let ((replacement-text (org-texnum//tag-from-num-list num-lst)))
         (if (not (string-equal (match-string 1) replacement-text))
-            (progn
-              (replace-match replacement-text nil nil nil 1)
-              ;; buffer parse is now invalid, perform the whole process again
-              (funcall-interactively #'org-texnum/update-eqn-numbers-in-current-buffer))))
+            (replace-match replacement-text nil nil nil 1)))
       (setq num-lst (-snoc (butlast num-lst) (+ 1 (car (last num-lst))))))
     ;; return number that should be used for next equation tag
     (let ((last-num (car (last num-lst))))
