@@ -106,26 +106,6 @@ subheadline."
     (let ((last-num (car (last num-lst))))
       last-num)))
 
-(defun org-texnum//execute-equations-in-section (section take)
-  "Only execute TAKE block so that this function can be called recursively."
-  (let ((latex-block (nth take (org-texnum//get-latex-blocks-in-section section))))
-    (if latex-block
-        (let ((beg (org-ml-get-property :begin latex-block)))
-          (goto-char (+ 1 beg))
-          (org-ctrl-c-ctrl-c)
-          (org-texnum//execute-equations-in-section
-           ;; need to refresh invalidated section
-           (org-ml-parse-section-at (point))
-           (+ 1 take))))))
-
-(defun org-texnum//execute-equations-in-headline (headline)
-  ""
-  (let ((section (org-texnum//get-section headline))
-        (headlines (org-texnum//get-headlines headline)))
-    (org-texnum//execute-equations-in-section section 0)
-    (dolist (headline headlines)
-      (org-texnum//execute-equations-in-headline headline))))
-
 (defun org-texnum//update-equation-numbers-in-section (section num-lst)
   ""
   (let ((latex-blocks (org-texnum//get-latex-blocks-in-section section))
