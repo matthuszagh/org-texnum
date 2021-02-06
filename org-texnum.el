@@ -126,7 +126,7 @@ subheadline."
     (dolist (headline headlines)
       (org-texnum//execute-equations-in-headline headline))))
 
-(defun org-texnum//update-eqn-numbers-in-section (section num-lst)
+(defun org-texnum//update-equation-numbers-in-section (section num-lst)
   ""
   (let ((latex-blocks (org-texnum//get-latex-blocks-in-section section))
         (i 1))
@@ -144,14 +144,14 @@ subheadline."
                 (setq i (org-texnum//update-tags-in-equation num-lst beg end))
                 (setq num-lst (-snoc (butlast num-lst) i)))))))))
 
-(defun org-texnum//update-eqn-numbers-in-headline (headline num-lst)
+(defun org-texnum//update-equation-numbers-in-headline (headline num-lst)
   ""
   (let ((section (org-texnum//get-section headline))
         (headlines (org-texnum//get-headlines headline)))
-    (org-texnum//update-eqn-numbers-in-section section num-lst)
+    (org-texnum//update-equation-numbers-in-section section num-lst)
     (let ((i 1))
       (dolist (headline headlines)
-        (org-texnum//update-eqn-numbers-in-headline headline (-snoc num-lst i))
+        (org-texnum//update-equation-numbers-in-headline headline (-snoc num-lst i))
         (setq i (+ 1 i))))))
 
 (defun org-texnum//latex-blocks-in-headline (headline latex-blocks)
@@ -208,23 +208,23 @@ subheadline."
   (interactive)
   (org-texnum//execute-all-latex-blocks-in-current-buffer-from-count 0))
 
-;; TODO separate update equation numbers and execute all
-;; equations. Top-level function that calls both should be called
-;; `org-texnum/normalize-equation-numbers-in-buffer'.
-
-(defun org-texnum/update-eqn-numbers-in-current-buffer ()
-  "Update equation numbers LaTeX src blocks and execute all blocks."
+(defun org-texnum/update-equation-numbers-in-current-buffer ()
+  "Update equation numbers LaTeX src blocks in the current buffer."
   (interactive)
   (let* ((data (org-ml-get-children (org-ml-parse-this-buffer)))
          (section (org-texnum//get-section data))
          (headlines (org-texnum//get-headlines data))
          (num-lst '(0)))
-    (org-texnum//update-eqn-numbers-in-section section num-lst)
+    (org-texnum//update-equation-numbers-in-section section num-lst)
     (let ((i 1))
       (dolist (headline headlines)
-        (org-texnum//update-eqn-numbers-in-headline headline (list i))
-        (setq i (+ 1 i))))
-    (org-texnum/execute-all-latex-blocks-in-current-buffer)))
+        (org-texnum//update-equation-numbers-in-headline headline (list i))
+        (setq i (+ 1 i))))))
+
+(defun org-texnum/normalize-equation-numbers-in-current-buffer ()
+  "Update equation numbers LaTeX src blocks and execute all blocks."
+  (org-texnum/update-equation-numbers-in-current-buffer)
+  (org-texnum/execute-all-latex-blocks-in-current-buffer))
 
 (provide 'org-texnum)
 
