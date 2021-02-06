@@ -160,8 +160,68 @@ subheadline."
         (org-texnum//update-eqn-numbers-in-headline headline (-snoc num-lst i))
         (setq i (+ 1 i))))))
 
+(defun org-texnum//latex-blocks-in-headline (headline latex-blocks)
+  "Retrieve all LATEX-BLOCKS (LaTeX src blocks) in HEADLINE."
+  (let ((section (org-texnum//get-section headline))
+        (headlines (org-texnum//get-headlines headline)))
+    (setq latex-blocks
+          (append latex-blocks (org-texnum//get-latex-blocks-in-section section)))
+    (dolist (headline headlines)
+      (setq latex-blocks
+            (org-texnum//latex-blocks-in-headline headline latex-blocks)))
+    latex-blocks))
+
+(defun org-texnum//latex-blocks-in-buffer ()
+  "Retrieve all LaTeX src blocks in the current buffer."
+  (let* ((buffer-tree (org-ml-parse-this-buffer))
+         (top-section (car (org-ml-match '(section) buffer-tree)))
+         (latex-blocks (org-texnum//get-latex-blocks-in-section top-section))
+         (headlines (org-texnum//get-headlines buffer-tree)))
+    (dolist (headline headlines)
+      (setq latex-blocks (org-texnum//latex-blocks-in-headline headline latex-blocks)))
+    latex-blocks))
+
+(defun org-texnum//latex-blocks-begin ()
+  "Retrieve begin position of all LaTeX blocks in the current buffer."
+  (let ((latex-blocks (org-texnum//latex-blocks-in-buffer))
+        (blocks-begin '()))
+    (dolist (latex-block latex-blocks)
+      (setq blocks-begin (append blocks-begin
+                                 (list (org-ml-get-property :begin latex-block)))))
+    blocks-begin))
+
+(defun org-texnum//execute-latex-block-at-pos (pos)
+  "Execute LaTeX block at POS."
+  (goto-char pos)
+  (org-ctrl-c-ctrl-c))
+
+(defun org-texnum//execute-all-latex-blocks-in-buffer-from-count (count)
+  "Execute all LaTeX src blocks (ctrl-C ctrl-C) in the current buffer from COUNT."
+  (let* ((latex-blocks-begin (org-texnum//latex-blocks-begin))
+         (latex-block-counter-max (length latex-blocks-begin)))
+    (if (not (eq count latex-block-counter-max))
+        (let ((begin (nth count latex-blocks-begin)))
+          (while  (and (not (buffer-modified-p))
+                       (< count latex-block-counter-max))
+            (org-texnum//execute-latex-block-at-pos begin)
+            (setq count (+ 1 count))
+            (setq begin (nth count latex-blocks-begin)))
+          (save-buffer)
+          (org-texnum//execute-all-latex-blocks-in-buffer-from-count count)))))
+
+(defun org-texnum/execute-all-latex-blocks-in-buffer ()
+  "Execute all LaTeX src blocks (ctrl-C ctrl-C) in the current buffer."
+  (interactive)
+  (org-texnum//execute-all-latex-blocks-in-buffer-from-count 0))
+
+;; TODO rename in-buffer to in-current-buffer to be more accurate.
+
+;; TODO separate update equation numbers and execute all
+;; equations. Top-level function that calls both should be called
+;; `org-texnum/normalize-equation-numbers-in-buffer'.
+
 (defun org-texnum/update-eqn-numbers-in-buffer ()
-  ""
+  "Update equation numbers LaTeX src blocks and execute all blocks."
   (interactive)
   (let* ((data (org-ml-get-children (org-ml-parse-this-buffer)))
          (section (org-texnum//get-section data))
@@ -172,13 +232,7 @@ subheadline."
       (dolist (headline headlines)
         (org-texnum//update-eqn-numbers-in-headline headline (list i))
         (setq i (+ 1 i))))
-    ;; update equation numbers
-    (org-texnum//execute-equations-in-section section 0)
-    ;; TODO the minute one headline changes due to an executed block,
-    ;; all others are invalidated. We deal with invalidated sections,
-    ;; but not the full buffer parse.
-    (dolist (headline headlines)
-      (org-texnum//execute-equations-in-headline headline))))
+    (org-texnum/execute-all-latex-blocks-in-buffer)))
 
 (provide 'org-texnum)
 
