@@ -148,7 +148,7 @@ subheadline."
 (defun org-texnum//latex-blocks-in-current-buffer ()
   "Retrieve all LaTeX src blocks in the current buffer."
   (let* ((buffer-tree (org-ml-parse-this-buffer))
-         (top-section (car (org-ml-match '(section) buffer-tree)))
+         (top-section (org-texnum//get-section buffer-tree))
          (latex-blocks (org-texnum//get-latex-blocks-in-section top-section))
          (headlines (org-texnum//get-headlines buffer-tree)))
     (dolist (headline headlines)
