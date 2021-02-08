@@ -203,6 +203,7 @@ subheadline."
 
 (defun org-texnum/normalize-equation-numbers-in-current-buffer ()
   "Update equation numbers LaTeX src blocks and execute all blocks."
+  (interactive)
   (org-texnum/update-equation-numbers-in-current-buffer)
   (org-texnum/execute-all-latex-blocks-in-current-buffer))
 
