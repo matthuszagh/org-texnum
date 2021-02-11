@@ -186,7 +186,8 @@ subheadline."
 (defun org-texnum/execute-all-latex-blocks-in-current-buffer ()
   "Execute all LaTeX src blocks (ctrl-C ctrl-C) in the current buffer."
   (interactive)
-  (org-texnum//execute-all-latex-blocks-in-current-buffer-from-count 0))
+  (save-excursion
+    (org-texnum//execute-all-latex-blocks-in-current-buffer-from-count 0)))
 
 (defun org-texnum/update-equation-numbers-in-current-buffer ()
   "Update equation numbers LaTeX src blocks in the current buffer."
